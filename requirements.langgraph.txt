@@ -19,7 +19,7 @@ sentence-transformers>=2.2.0
 
 # Performance monitoring
 prometheus-client>=0.17.0
-opencensus-ext-prometheus>=0.8.0
+opencensus-ext-prometheus>=0.2.1
 
 # Your existing requirements
 fastapi>=0.104.1
