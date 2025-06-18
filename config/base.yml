@@ -1,0 +1,446 @@
+# config/base.yml - Base Configuration
+# Common settings shared across all environments
+
+app:
+  name: "langgraph-search"
+  version: "2.0.0"
+  description: "LangGraph Advanced Search System"
+  timezone: "UTC"
+  
+api:
+  title: "LangGraph Search API"
+  description: "Advanced AI-powered search with multi-agent workflows"
+  version: "2.0.0"
+  contact:
+    name: "API Support"
+    email: "support@langgraph-search.com"
+  license:
+    name: "MIT"
+    url: "https://opensource.org/licenses/MIT"
+  
+  # Request handling
+  max_request_size: 10485760  # 10MB
+  request_timeout: 30
+  max_concurrent_requests: 100
+  
+  # Rate limiting
+  rate_limit:
+    default:
+      requests_per_minute: 60
+      burst: 10
+    authenticated:
+      requests_per_minute: 600
+      burst: 50
+    premium:
+      requests_per_minute: 6000
+      burst: 200
+
+# LangGraph workflow configuration
+langgraph:
+  workflows:
+    default_complexity: "adaptive"
+    max_iterations: 5
+    timeout_seconds: 30
+    enable_checkpoints: true
+    checkpoint_ttl: 3600  # 1 hour
+    
+    # Workflow complexity routing
+    complexity_thresholds:
+      simple: 0.3
+      adaptive: 0.5
+      iterative: 0.7
+      collaborative: 0.8
+      research: 0.9
+    
+    # Quality gates
+    quality_gates:
+      initial:
+        strategy_validation: true
+        resource_adequacy_check: true
+        feasibility_assessment: true
+      intermediate:
+        progress_validation: true
+        approach_adjustment: true
+        resource_reallocation: true
+      final:
+        confidence_threshold: 0.7
+        source_diversity_min: 3
+        response_completeness: true
+        
+  # Agent configuration
+  agents:
+    query_classifier:
+      model: "gpt-4"
+      temperature: 0.1
+      max_tokens: 500
+      timeout: 10
+      
+    query_enhancer:
+      model: "gpt-4"
+      temperature: 0.3
+      max_tokens: 1000
+      timeout: 15
+      
+    content_analyzer:
+      model: "gpt-4"
+      temperature: 0.2
+      max_tokens: 2000
+      timeout: 20
+      
+    response_synthesizer:
+      model: "gpt-4"
+      temperature: 0.4
+      max_tokens: 3000
+      timeout: 25
+
+# Search engine configuration
+search:
+  engines:
+    brave:
+      enabled: true
+      weight: 0.4
+      timeout: 10
+      max_results: 20
+      retry_attempts: 3
+      retry_delay: 1
+      
+    serpapi:
+      enabled: true
+      weight: 0.4
+      timeout: 10
+      max_results: 20
+      retry_attempts: 3
+      retry_delay: 1
+      
+    zenrows:
+      enabled: true
+      weight: 0.2
+      timeout: 15
+      max_results: 10
+      retry_attempts: 2
+      retry_delay: 2
+      
+  # Result processing
+  max_total_results: 50
+  deduplication_enabled: true
+  content_extraction_timeout: 30
+  relevance_threshold: 0.3
+  
+  # Fallback configuration
+  fallback:
+    enabled: true
+    engines: ["brave", "serpapi"]  # Fallback order
+    max_retries: 3
+
+# LLM service configuration
+llm:
+  providers:
+    openai:
+      enabled: true
+      model: "gpt-4"
+      temperature: 0.3
+      max_tokens: 2048
+      timeout: 30
+      retry_attempts: 3
+      
+    anthropic:
+      enabled: true
+      model: "claude-3-sonnet-20240229"
+      temperature: 0.3
+      max_tokens: 2048
+      timeout: 30
+      retry_attempts: 3
+      
+  # Model selection strategy
+  selection_strategy: "round_robin"  # round_robin, best_available, cost_optimized
+  fallback_enabled: true
+  
+  # Cost management
+  cost_limits:
+    daily_budget: 100.0  # USD
+    per_request_limit: 0.10  # USD
+    warning_threshold: 0.8  # 80% of budget
+
+# Database configuration
+database:
+  pool_size: 20
+  max_overflow: 30
+  pool_timeout: 30
+  pool_recycle: 3600
+  
+  # Connection retry
+  retry_attempts: 3
+  retry_delay: 1
+  
+  # Migration settings
+  migration_timeout: 300
+  backup_before_migration: true
+
+# Redis configuration
+redis:
+  pool_size: 20
+  socket_timeout: 30
+  socket_connect_timeout: 30
+  retry_on_timeout: true
+  health_check_interval: 30
+  
+  # Key patterns
+  key_patterns:
+    cache: "cache:{namespace}:{key}"
+    session: "session:{user_id}:{session_id}"
+    metrics: "metrics:{tenant_id}:{metric}:{timestamp}"
+    lock: "lock:{resource}:{identifier}"
+
+# Caching configuration
+cache:
+  default_ttl: 3600  # 1 hour
+  
+  # Cache levels
+  levels:
+    query_results:
+      ttl: 1800  # 30 minutes
+      max_size: 1000
+      
+    search_metadata:
+      ttl: 3600  # 1 hour
+      max_size: 5000
+      
+    user_sessions:
+      ttl: 86400  # 24 hours
+      max_size: 10000
+      
+    analytics_data:
+      ttl: 300  # 5 minutes
+      max_size: 50000
+
+# Security configuration
+security:
+  # CORS
+  cors:
+    allow_origins: []  # Override in environment configs
+    allow_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allow_headers: ["*"]
+    allow_credentials: true
+    max_age: 86400
+    
+  # JWT
+  jwt:
+    algorithm: "HS256"
+    access_token_expire_minutes: 30
+    refresh_token_expire_days: 7
+    
+  # API Keys
+  api_keys:
+    header_name: "X-API-Key"
+    require_https: true
+    
+  # Content Security
+  content_security:
+    max_query_length: 500
+    max_response_length: 10000
+    sanitize_html: true
+    
+  # Rate limiting
+  rate_limiting:
+    storage: "redis"
+    key_func: "ip_and_user"
+    default_limits:
+      per_minute: 60
+      per_hour: 1000
+      per_day: 10000
+
+# Compliance configuration
+compliance:
+  frameworks:
+    enabled: ["GDPR", "CCPA"]
+    
+  gdpr:
+    data_retention_days: 365
+    consent_required: true
+    right_to_be_forgotten: true
+    data_portability: true
+    breach_notification_hours: 72
+    
+  ccpa:
+    data_retention_days: 365
+    right_to_delete: true
+    right_to_know: true
+    opt_out_support: true
+    
+  # PII Detection
+  pii_detection:
+    enabled: true
+    patterns:
+      email: true
+      phone: true
+      ssn: true
+      credit_card: true
+      ip_address: true
+    action: "anonymize"  # anonymize, redact, flag
+    
+  # Audit logging
+  audit:
+    enabled: true
+    log_level: "INFO"
+    retention_days: 90
+    include_request_body: false
+    include_response_body: false
+
+# Analytics configuration
+analytics:
+  real_time:
+    enabled: true
+    batch_size: 100
+    flush_interval: 60
+    sampling_rate: 1.0
+    
+  metrics:
+    retention_days: 30
+    aggregation_intervals: [300, 3600, 86400]  # 5min, 1hour, 1day
+    
+  # Performance tracking
+  performance:
+    track_response_times: true
+    track_resource_usage: true
+    track_error_rates: true
+    track_user_satisfaction: true
+    
+  # Business metrics
+  business:
+    track_revenue: true
+    track_costs: true
+    track_conversion_rates: true
+    track_user_engagement: true
+
+# Multi-tenancy configuration
+multitenancy:
+  enabled: true
+  isolation_strategy: "namespace"  # namespace, database, schema
+  
+  # Resource allocation
+  default_limits:
+    requests_per_hour: 1000
+    concurrent_requests: 10
+    storage_mb: 1000
+    
+  # Tenant tiers
+  tiers:
+    free:
+      requests_per_hour: 100
+      concurrent_requests: 2
+      storage_mb: 100
+      features: ["basic_search"]
+      
+    pro:
+      requests_per_hour: 1000
+      concurrent_requests: 10
+      storage_mb: 1000
+      features: ["basic_search", "advanced_workflows", "analytics"]
+      
+    enterprise:
+      requests_per_hour: 10000
+      concurrent_requests: 50
+      storage_mb: 10000
+      features: ["all"]
+
+# Monitoring configuration
+monitoring:
+  health_checks:
+    enabled: true
+    interval: 30
+    timeout: 10
+    
+  metrics:
+    enabled: true
+    endpoint: "/metrics"
+    include_process_metrics: true
+    include_runtime_metrics: true
+    
+  # Alerting thresholds
+  alerts:
+    error_rate_threshold: 0.05  # 5%
+    response_time_p95_threshold: 5.0  # 5 seconds
+    memory_usage_threshold: 0.8  # 80%
+    cpu_usage_threshold: 0.8  # 80%
+    
+  # Tracing
+  tracing:
+    enabled: false  # Enable in development/staging
+    sampling_rate: 0.1
+    service_name: "langgraph-search"
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "json"
+  
+  # Log destinations
+  handlers:
+    console:
+      enabled: true
+      level: "INFO"
+      format: "detailed"
+      
+    file:
+      enabled: false  # Enable in production
+      level: "INFO"
+      max_size: "100MB"
+      backup_count: 5
+      
+    elasticsearch:
+      enabled: false  # Enable in production
+      level: "INFO"
+      index: "langgraph-search-logs"
+      
+  # Log filtering
+  filters:
+    exclude_paths: ["/health", "/metrics"]
+    exclude_user_agents: ["kube-probe"]
+    sanitize_sensitive_data: true
+
+# Feature flags
+features:
+  vector_search: true
+  semantic_similarity: true
+  multi_round_conversations: true
+  collaborative_workflows: true
+  advanced_analytics: true
+  real_time_streaming: true
+  webhook_notifications: false
+  external_integrations: false
+  
+# Performance optimization
+performance:
+  # Connection pooling
+  connection_pools:
+    database:
+      min_size: 5
+      max_size: 20
+      
+    redis:
+      min_size: 5
+      max_size: 20
+      
+    http:
+      connector_limit: 100
+      connector_limit_per_host: 30
+      
+  # Circuit breaker
+  circuit_breaker:
+    failure_threshold: 5
+    recovery_timeout: 60
+    expected_exception: "RequestException"
+    
+  # Timeouts
+  timeouts:
+    database_query: 30
+    external_api: 30
+    llm_generation: 60
+    search_engine: 15
+    
+# Development tools (disable in production)
+development:
+  debug: false
+  reload: false
+  profiling: false
+  mock_external_apis: false
