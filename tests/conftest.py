@@ -65,3 +65,34 @@ async def mock_search_engines():
             timestamp=datetime.now()
         )
     ]
+
+    # Mock search engines
+    brave_engine = Mock()
+    brave_engine.search = AsyncMock(return_value=mock_results[:1])
+    
+    serpapi_engine = Mock() 
+    serpapi_engine.search = AsyncMock(return_value=mock_results[1:])
+    
+    return {"brave": brave_engine, "serpapi": serpapi_engine}
+
+@pytest.fixture
+async def mock_content_fetcher():
+    """Mock content fetcher for testing"""
+    from app.services.search_engines import ZenRowsContentFetcher
+    
+    fetcher = ZenRowsContentFetcher()
+    
+    mock_content = [
+        {
+            "url": "https://example.com/1",
+            "content": "This is detailed content from example.com with lots of information about the topic.",
+            "word_count": 15,
+            "success": True,
+            "timestamp": "2024-01-01T00:00:00"
+        }
+    ]
+    
+    fetcher.fetch_content = AsyncMock(return_value=mock_content)
+    
+    return fetcher
+
