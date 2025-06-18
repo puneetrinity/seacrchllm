@@ -1,0 +1,97 @@
+# docker-compose.langgraph.yml
+version: '3.8'
+
+services:
+  # Main LangGraph Application
+  langgraph-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.langgraph
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:password@postgres:5432/langgraph_db
+      - REDIS_URL=redis://redis:6379
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      - LANGSMITH_TRACING=true
+      - OLLAMA_HOST=http://ollama:11434
+      - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
+      - SERPAPI_API_KEY=${SERPAPI_API_KEY}
+      - ZENROWS_API_KEY=${ZENROWS_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+      - ollama
+    volumes:
+      - ./logs:/app/logs
+      - ./checkpoints:/app/checkpoints
+    restart: unless-stopped
+
+  # PostgreSQL for checkpointing
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: langgraph_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  # Redis for caching and state
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  # Ollama for local LLM
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+
+  # LangSmith for monitoring (optional)
+  langsmith-tracer:
+    image: langchain/langsmith:latest
+    environment:
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+    depends_on:
+      - langgraph-app
+    restart: unless-stopped
+
+  # Performance monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  # Monitoring dashboard
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+
+volumes:
+  postgres_data:
+  redis_data:
+  ollama_data:
+  prometheus_data:
+  grafana_data:
