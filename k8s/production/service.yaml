@@ -1,0 +1,21 @@
+# k8s/production/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: langgraph-search-service
+  namespace: langgraph-search
+  labels:
+    app: langgraph-search-api
+spec:
+  selector:
+    app: langgraph-search-api
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  - name: metrics
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
