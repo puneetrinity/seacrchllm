@@ -1,0 +1,141 @@
+# k8s/monitoring/prometheus.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: langgraph-search
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    rule_files:
+      - "alert_rules.yml"
+    
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+    
+    scrape_configs:
+      - job_name: 'langgraph-search'
+        static_configs:
+          - targets: ['langgraph-search-service:8080']
+        metrics_path: /metrics
+        scrape_interval: 10s
+        
+      - job_name: 'redis-cluster'
+        static_configs:
+          - targets: ['redis-cluster:6379']
+        metrics_path: /metrics
+        
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - langgraph-search
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+
+  alert_rules.yml: |
+    groups:
+    - name: langgraph-search-alerts
+      rules:
+      - alert: HighResponseTime
+        expr: avg(langgraph_search_response_time) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time detected"
+          description: "Average response time is {{ $value }}s"
+          
+      - alert: LowCacheHitRate
+        expr: langgraph_search_cache_hit_rate < 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value }}"
+          
+      - alert: HighErrorRate
+        expr: rate(langgraph_search_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} per second"
+          
+      - alert: PodCrashLooping
+        expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod is crash looping"
+          description: "Pod {{ $labels.pod }} is restarting frequently"
+
+---
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: langgraph-search
+data:
+  langgraph-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "LangGraph Search Performance",
+        "panels": [
+          {
+            "title": "Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "avg(langgraph_search_response_time)",
+                "legendFormat": "Average Response Time"
+              }
+            ]
+          },
+          {
+            "title": "Cache Hit Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "langgraph_search_cache_hit_rate",
+                "legendFormat": "Cache Hit Rate"
+              }
+            ]
+          },
+          {
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(langgraph_search_requests_total[5m])",
+                "legendFormat": "Requests/sec"
+              }
+            ]
+          },
+          {
+            "title": "Quality Score Distribution",
+            "type": "histogram",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, langgraph_search_quality_score)",
+                "legendFormat": "95th percentile"
+              }
+            ]
+          }
+        ]
+      }
+    }
