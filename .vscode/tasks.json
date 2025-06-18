@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Compile Python App",
+			"command": "c:/Users/EverWanderingSoul/seacrchllm/.venv/Scripts/python.exe -m compileall .",
+			"group": "build",
+			"problemMatcher": [
+				"$python"
+			],
+			"args": []
+		}
+	]
+}

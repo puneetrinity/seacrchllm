@@ -10,7 +10,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from functools import lru_cache
 from dynaconf import Dynaconf, Validator
-from pydantic import BaseSettings, Field, validator
+from pydantic_settings import BaseSettings
+from pydantic import Field, validator
 import yaml
 
 # Configure logging
