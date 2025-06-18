@@ -1,0 +1,353 @@
+# config/development.yml - Development Environment Configuration
+# Overrides base.yml settings for local development
+
+api:
+  debug: true
+  reload: true
+  
+  # Relaxed rate limiting for development
+  rate_limit:
+    default:
+      requests_per_minute: 1000
+      burst: 100
+    authenticated:
+      requests_per_minute: 5000
+      burst: 500
+
+# LangGraph development settings
+langgraph:
+  workflows:
+    # Faster timeouts for development
+    timeout_seconds: 60
+    enable_checkpoints: true
+    checkpoint_ttl: 1800  # 30 minutes
+    
+    # Lower quality thresholds for testing
+    quality_gates:
+      final:
+        confidence_threshold: 0.5  # Lower for testing
+        source_diversity_min: 1    # Relaxed for development
+        
+  # Development agent settings
+  agents:
+    query_classifier:
+      temperature: 0.3  # Higher for more varied responses
+      timeout: 30       # Longer for debugging
+      
+    query_enhancer:
+      temperature: 0.5
+      timeout: 30
+      
+    content_analyzer:
+      temperature: 0.4
+      timeout: 45
+      
+    response_synthesizer:
+      temperature: 0.6
+      timeout: 60
+
+# Search engines - development settings
+search:
+  engines:
+    brave:
+      timeout: 30      # Longer timeouts for debugging
+      max_results: 10  # Fewer results for faster testing
+      
+    serpapi:
+      timeout: 30
+      max_results: 10
+      
+    zenrows:
+      timeout: 45
+      max_results: 5
+      
+  # Development result processing
+  max_total_results: 20  # Fewer for faster development
+  content_extraction_timeout: 60
+
+# LLM development settings
+llm:
+  providers:
+    openai:
+      temperature: 0.5  # More creative for testing
+      timeout: 60       # Longer for debugging
+      
+    anthropic:
+      temperature: 0.5
+      timeout: 60
+      
+  # Cost management - relaxed for development
+  cost_limits:
+    daily_budget: 50.0    # Lower budget for dev
+    per_request_limit: 0.25
+    warning_threshold: 0.9
+
+# Development database settings
+database:
+  # Local development database
+  url: "postgresql://langgraph_user:langgraph_pass@localhost:5432/langgraph_search_dev"
+  
+  # Smaller pools for local development
+  pool_size: 5
+  max_overflow: 10
+  
+  # Development-friendly settings
+  echo: true  # SQL logging
+  
+# Development Redis settings
+redis:
+  url: "redis://localhost:6379/0"
+  decode_responses: true
+  
+# Relaxed caching for development
+cache:
+  default_ttl: 300  # 5 minutes for faster iteration
+  
+  levels:
+    query_results:
+      ttl: 300      # 5 minutes
+      max_size: 100
+      
+    search_metadata:
+      ttl: 600      # 10 minutes
+      max_size: 500
+      
+    user_sessions:
+      ttl: 3600     # 1 hour
+      max_size: 100
+
+# Development security settings
+security:
+  # CORS - allow local development
+  cors:
+    allow_origins: [
+      "http://localhost:3000",    # React dev server
+      "http://localhost:8080",    # Vue dev server
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:8080"
+    ]
+    
+  # JWT - longer tokens for development
+  jwt:
+    access_token_expire_minutes: 480  # 8 hours
+    refresh_token_expire_days: 30
+    
+  # API Keys - not required in development
+  api_keys:
+    require_https: false
+    
+  # Relaxed content security
+  content_security:
+    max_query_length: 1000    # Allow longer queries for testing
+    max_response_length: 20000
+    
+  # Relaxed rate limiting
+  rate_limiting:
+    default_limits:
+      per_minute: 1000
+      per_hour: 10000
+      per_day: 100000
+
+# Development compliance settings
+compliance:
+  # Relaxed for development
+  frameworks:
+    enabled: ["GDPR"]  # Only GDPR for simplicity
+    
+  # PII Detection - flag only in development
+  pii_detection:
+    action: "flag"  # Don't anonymize in development
+    
+  # Audit logging - reduced in development
+  audit:
+    log_level: "DEBUG"
+    include_request_body: true   # Include for debugging
+    include_response_body: true
+
+# Development analytics
+analytics:
+  real_time:
+    sampling_rate: 1.0      # Sample everything in development
+    flush_interval: 30      # Faster flushing
+    
+  metrics:
+    retention_days: 7       # Shorter retention
+    
+# Multi-tenancy - simplified for development
+multitenancy:
+  enabled: false  # Disable for simpler development
+  
+# Development monitoring
+monitoring:
+  health_checks:
+    interval: 60  # Less frequent in development
+    
+  # Alerting - disabled in development
+  alerts:
+    error_rate_threshold: 0.2     # 20% - very relaxed
+    response_time_p95_threshold: 30.0  # 30 seconds
+    
+  # Tracing enabled for development
+  tracing:
+    enabled: true
+    sampling_rate: 1.0  # Trace everything
+    service_name: "langgraph-search-dev"
+
+# Development logging
+logging:
+  level: "DEBUG"
+  format: "detailed"  # Human-readable format
+  
+  # Console logging for development
+  handlers:
+    console:
+      enabled: true
+      level: "DEBUG"
+      format: "detailed"
+      
+    file:
+      enabled: true
+      level: "DEBUG"
+      path: "logs/development.log"
+      max_size: "50MB"
+      backup_count: 3
+
+# Feature flags - enable experimental features
+features:
+  vector_search: true
+  semantic_similarity: true
+  multi_round_conversations: true
+  collaborative_workflows: true
+  advanced_analytics: true
+  real_time_streaming: true
+  webhook_notifications: true      # Enable for testing
+  external_integrations: true     # Enable for testing
+
+# Development performance settings
+performance:
+  # Smaller connection pools
+  connection_pools:
+    database:
+      min_size: 2
+      max_size: 5
+      
+    redis:
+      min_size: 2
+      max_size: 5
+      
+    http:
+      connector_limit: 20
+      connector_limit_per_host: 10
+      
+  # Relaxed circuit breaker
+  circuit_breaker:
+    failure_threshold: 10    # Allow more failures
+    recovery_timeout: 30     # Faster recovery
+    
+  # Longer timeouts for debugging
+  timeouts:
+    database_query: 60
+    external_api: 60
+    llm_generation: 120
+    search_engine: 30
+
+# Development tools - all enabled
+development:
+  debug: true
+  reload: true
+  profiling: true
+  mock_external_apis: false  # Use real APIs but with relaxed settings
+  
+  # Development-specific endpoints
+  endpoints:
+    debug_info: true
+    admin_panel: true
+    metrics_ui: true
+    
+  # Testing helpers
+  testing:
+    seed_data: true
+    mock_responses: true
+    bypass_auth: false  # Keep auth for realistic testing
+    
+# Local file storage (instead of cloud storage in development)
+storage:
+  type: "local"
+  base_path: "./data"
+  
+  directories:
+    uploads: "./data/uploads"
+    cache: "./data/cache"
+    logs: "./data/logs"
+    exports: "./data/exports"
+
+# Development-specific external service URLs
+external_services:
+  # Use local or development instances
+  ollama:
+    base_url: "http://localhost:11434"
+    timeout: 60
+    
+  elasticsearch:
+    hosts: ["http://localhost:9200"]
+    timeout: 30
+    
+  prometheus:
+    gateway_url: "http://localhost:9091"
+    
+# Mock data settings for development
+mock_data:
+  enabled: false  # Set to true to use completely mocked responses
+  
+  # Mock response configurations
+  search_results:
+    count: 5
+    latency_ms: 500  # Simulate realistic latency
+    
+  llm_responses:
+    latency_ms: 1000
+    
+# Development server settings
+server:
+  host: "127.0.0.1"
+  port: 8000
+  workers: 1  # Single worker for easier debugging
+  
+  # Development SSL (if needed)
+  ssl:
+    enabled: false
+    keyfile: null
+    certfile: null
+    
+# Hot reload settings
+reload:
+  enabled: true
+  patterns:
+    - "*.py"
+    - "*.yml"
+    - "*.yaml"
+    - "*.json"
+  exclude_patterns:
+    - "__pycache__/*"
+    - "*.pyc"
+    - ".git/*"
+    - "logs/*"
+    
+# Development database seeding
+database_seeding:
+  enabled: true
+  seed_files:
+    - "seeds/users.sql"
+    - "seeds/tenants.sql"
+    - "seeds/sample_queries.sql"
+    
+# Development API documentation
+docs:
+  enabled: true
+  openapi_url: "/openapi.json"
+  docs_url: "/docs"
+  redoc_url: "/redoc"
+  
+  # Include examples and schemas
+  include_examples: true
+  include_schemas: true
