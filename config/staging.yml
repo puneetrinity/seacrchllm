@@ -1,0 +1,433 @@
+# config/staging.yml - Staging Environment Configuration
+# Production-like settings with some debugging capabilities
+
+api:
+  debug: false
+  reload: false
+  
+  # Production-like rate limiting but slightly relaxed
+  rate_limit:
+    default:
+      requests_per_minute: 100
+      burst: 20
+    authenticated:
+      requests_per_minute: 1000
+      burst: 100
+    premium:
+      requests_per_minute: 3000
+      burst: 150
+
+# LangGraph staging settings
+langgraph:
+  workflows:
+    # Production timeouts
+    timeout_seconds: 30
+    enable_checkpoints: true
+    checkpoint_ttl: 3600  # 1 hour
+    
+    # Production quality gates
+    quality_gates:
+      final:
+        confidence_threshold: 0.65  # Slightly lower than prod for testing
+        source_diversity_min: 2     # Slightly relaxed
+        
+  # Staging agent settings - close to production
+  agents:
+    query_classifier:
+      model: "gpt-4"
+      temperature: 0.1
+      timeout: 15
+      
+    query_enhancer:
+      model: "gpt-4"
+      temperature: 0.3
+      timeout: 20
+      
+    content_analyzer:
+      model: "gpt-4"
+      temperature: 0.2
+      timeout: 25
+      
+    response_synthesizer:
+      model: "gpt-4"
+      temperature: 0.4
+      timeout: 30
+
+# Search engines - staging settings
+search:
+  engines:
+    brave:
+      timeout: 15
+      max_results: 15
+      retry_attempts: 3
+      
+    serpapi:
+      timeout: 15
+      max_results: 15
+      retry_attempts: 3
+      
+    zenrows:
+      timeout: 20
+      max_results: 8
+      retry_attempts: 2
+      
+  # Staging result processing
+  max_total_results: 35
+  content_extraction_timeout: 45
+
+# LLM staging settings
+llm:
+  providers:
+    openai:
+      temperature: 0.3
+      timeout: 45
+      
+    anthropic:
+      temperature: 0.3
+      timeout: 45
+      
+  # Cost management - production-like but with budget controls
+  cost_limits:
+    daily_budget: 200.0
+    per_request_limit: 0.15
+    warning_threshold: 0.8
+
+# Staging database settings
+database:
+  # Staging database connection
+  url: "${DATABASE_URL}"  # From environment variable
+  
+  # Production-like pools but smaller
+  pool_size: 15
+  max_overflow: 20
+  
+  # Staging-specific settings
+  echo: false  # No SQL logging in staging
+  
+# Staging Redis settings
+redis:
+  url: "${REDIS_URL}"  # From environment variable
+  decode_responses: true
+  
+# Production-like caching with shorter TTLs
+cache:
+  default_ttl: 1800  # 30 minutes
+  
+  levels:
+    query_results:
+      ttl: 900       # 15 minutes
+      max_size: 500
+      
+    search_metadata:
+      ttl: 1800      # 30 minutes
+      max_size: 2000
+      
+    user_sessions:
+      ttl: 43200     # 12 hours
+      max_size: 5000
+
+# Staging security settings
+security:
+  # CORS - staging domains only
+  cors:
+    allow_origins: [
+      "https://staging.langgraph-search.com",
+      "https://staging-app.langgraph-search.com",
+      "https://test.langgraph-search.com"
+    ]
+    
+  # JWT - production-like
+  jwt:
+    access_token_expire_minutes: 30
+    refresh_token_expire_days: 7
+    
+  # API Keys - require HTTPS
+  api_keys:
+    require_https: true
+    
+  # Production content security
+  content_security:
+    max_query_length: 500
+    max_response_length: 10000
+    
+  # Standard rate limiting
+  rate_limiting:
+    default_limits:
+      per_minute: 100
+      per_hour: 2000
+      per_day: 20000
+
+# Staging compliance settings
+compliance:
+  # Full compliance testing
+  frameworks:
+    enabled: ["GDPR", "CCPA", "SOC2"]
+    
+  # PII Detection - production mode
+  pii_detection:
+    action: "anonymize"
+    
+  # Audit logging - production level
+  audit:
+    log_level: "INFO"
+    include_request_body: false
+    include_response_body: false
+    retention_days: 60
+
+# Staging analytics
+analytics:
+  real_time:
+    sampling_rate: 0.5      # Sample 50% for performance testing
+    flush_interval: 60
+    
+  metrics:
+    retention_days: 14      # 2 weeks retention
+    
+# Multi-tenancy - enabled for testing
+multitenancy:
+  enabled: true
+  isolation_strategy: "namespace"
+  
+  # Staging tier limits
+  tiers:
+    free:
+      requests_per_hour: 50
+      concurrent_requests: 1
+      storage_mb: 50
+      
+    pro:
+      requests_per_hour: 500
+      concurrent_requests: 5
+      storage_mb: 500
+      
+    enterprise:
+      requests_per_hour: 5000
+      concurrent_requests: 25
+      storage_mb: 5000
+
+# Staging monitoring
+monitoring:
+  health_checks:
+    interval: 30
+    timeout: 10
+    
+  # Production-like alerting with relaxed thresholds
+  alerts:
+    error_rate_threshold: 0.08    # 8% - slightly relaxed
+    response_time_p95_threshold: 8.0  # 8 seconds
+    memory_usage_threshold: 0.85  # 85%
+    cpu_usage_threshold: 0.85     # 85%
+    
+  # Tracing enabled for staging validation
+  tracing:
+    enabled: true
+    sampling_rate: 0.3    # 30% sampling
+    service_name: "langgraph-search-staging"
+
+# Staging logging
+logging:
+  level: "INFO"
+  format: "json"
+  
+  # File and structured logging
+  handlers:
+    console:
+      enabled: true
+      level: "INFO"
+      format: "json"
+      
+    file:
+      enabled: true
+      level: "INFO"
+      path: "/app/logs/staging.log"
+      max_size: "100MB"
+      backup_count: 5
+      
+    # Optional ELK stack integration
+    elasticsearch:
+      enabled: false  # Enable if ELK stack available
+      level: "INFO"
+      index: "langgraph-search-staging"
+
+# Feature flags - test production features
+features:
+  vector_search: true
+  semantic_similarity: true
+  multi_round_conversations: true
+  collaborative_workflows: true
+  advanced_analytics: true
+  real_time_streaming: true
+  webhook_notifications: true
+  external_integrations: false  # Keep disabled for staging safety
+
+# Staging performance settings
+performance:
+  # Production-like connection pools
+  connection_pools:
+    database:
+      min_size: 3
+      max_size: 15
+      
+    redis:
+      min_size: 3
+      max_size: 15
+      
+    http:
+      connector_limit: 50
+      connector_limit_per_host: 20
+      
+  # Production circuit breaker settings
+  circuit_breaker:
+    failure_threshold: 5
+    recovery_timeout: 60
+    
+  # Production timeouts
+  timeouts:
+    database_query: 30
+    external_api: 30
+    llm_generation: 60
+    search_engine: 15
+
+# Staging-specific tools
+development:
+  debug: false
+  reload: false
+  profiling: false
+  mock_external_apis: false
+  
+  # Limited staging endpoints
+  endpoints:
+    debug_info: false
+    admin_panel: true    # Keep admin panel for staging testing
+    metrics_ui: true
+
+# Cloud storage for staging
+storage:
+  type: "s3"  # or "gcs", "azure"
+  bucket: "langgraph-search-staging"
+  
+  directories:
+    uploads: "uploads/"
+    cache: "cache/"
+    logs: "logs/"
+    exports: "exports/"
+
+# Staging external service URLs
+external_services:
+  # Staging instances of external services
+  ollama:
+    base_url: "${OLLAMA_URL}"
+    timeout: 30
+    
+  elasticsearch:
+    hosts: ["${ELASTICSEARCH_URL}"]
+    timeout: 30
+    
+  prometheus:
+    gateway_url: "${PROMETHEUS_GATEWAY_URL}"
+
+# Staging server settings
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 2  # Multiple workers for load testing
+  
+  # SSL in staging
+  ssl:
+    enabled: true
+    keyfile: "/etc/ssl/private/staging.key"
+    certfile: "/etc/ssl/certs/staging.crt"
+
+# Staging database setup
+database_seeding:
+  enabled: true
+  seed_files:
+    - "seeds/staging_users.sql"
+    - "seeds/staging_tenants.sql"
+    - "seeds/test_queries.sql"
+
+# Staging API documentation
+docs:
+  enabled: true
+  openapi_url: "/openapi.json"
+  docs_url: "/docs"
+  redoc_url: "/redoc"
+  
+  # Include comprehensive documentation for staging testing
+  include_examples: true
+  include_schemas: true
+
+# Load testing configuration
+load_testing:
+  enabled: true
+  max_concurrent_users: 50
+  ramp_up_duration: 300  # 5 minutes
+  test_duration: 1800    # 30 minutes
+  
+  # Test scenarios
+  scenarios:
+    simple_search:
+      weight: 40
+      requests_per_second: 10
+      
+    complex_search:
+      weight: 30
+      requests_per_second: 5
+      
+    streaming_search:
+      weight: 20
+      requests_per_second: 3
+      
+    admin_operations:
+      weight: 10
+      requests_per_second: 1
+
+# Staging-specific monitoring
+staging_monitoring:
+  # Performance baseline collection
+  baseline_collection:
+    enabled: true
+    duration_hours: 24
+    metrics_interval: 300  # 5 minutes
+    
+  # A/B testing framework
+  ab_testing:
+    enabled: true
+    traffic_split: 0.5  # 50/50 split for testing
+    
+  # Chaos engineering
+  chaos_testing:
+    enabled: false  # Enable manually for specific tests
+    
+# Staging backup configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention_days: 7
+  
+  # Backup types
+  types:
+    database: true
+    redis: true
+    logs: true
+    configuration: true
+
+# Staging notification settings
+notifications:
+  enabled: true
+  
+  channels:
+    slack:
+      webhook_url: "${SLACK_STAGING_WEBHOOK}"
+      channels: ["#staging-alerts"]
+      
+    email:
+      smtp_server: "${SMTP_SERVER}"
+      recipients: ["team@langgraph-search.com"]
+      
+  # Alert conditions
+  alert_conditions:
+    deployment_complete: true
+    performance_degradation: true
+    error_spike: true
+    security_incident: true
