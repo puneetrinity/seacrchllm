@@ -1,0 +1,614 @@
+# config/production.yml - Production Environment Configuration
+# Optimized for performance, reliability, and security
+
+api:
+  debug: false
+  reload: false
+  
+  # Production rate limiting
+  rate_limit:
+    default:
+      requests_per_minute: 60
+      burst: 10
+    authenticated:
+      requests_per_minute: 600
+      burst: 50
+    premium:
+      requests_per_minute: 6000
+      burst: 200
+
+# LangGraph production settings
+langgraph:
+  workflows:
+    # Strict production timeouts
+    timeout_seconds: 30
+    enable_checkpoints: true
+    checkpoint_ttl: 3600  # 1 hour
+    
+    # Strict production quality gates
+    quality_gates:
+      initial:
+        strategy_validation: true
+        resource_adequacy_check: true
+        feasibility_assessment: true
+        performance_prediction: true
+        
+      intermediate:
+        progress_validation: true
+        approach_adjustment: true
+        resource_reallocation: true
+        quality_checkpoint: true
+        
+      final:
+        confidence_threshold: 0.7
+        source_diversity_min: 3
+        response_completeness: true
+        factual_accuracy_check: true
+        
+  # Production agent settings - optimized
+  agents:
+    query_classifier:
+      model: "gpt-4"
+      temperature: 0.1
+      max_tokens: 500
+      timeout: 10
+      
+    query_enhancer:
+      model: "gpt-4"
+      temperature: 0.3
+      max_tokens: 1000
+      timeout: 15
+      
+    content_analyzer:
+      model: "gpt-4"
+      temperature: 0.2
+      max_tokens: 2000
+      timeout: 20
+      
+    response_synthesizer:
+      model: "gpt-4"
+      temperature: 0.4
+      max_tokens: 3000
+      timeout: 25
+
+# Search engines - production optimized
+search:
+  engines:
+    brave:
+      enabled: true
+      weight: 0.4
+      timeout: 10
+      max_results: 20
+      retry_attempts: 3
+      retry_delay: 1
+      
+    serpapi:
+      enabled: true
+      weight: 0.4
+      timeout: 10
+      max_results: 20
+      retry_attempts: 3
+      retry_delay: 1
+      
+    zenrows:
+      enabled: true
+      weight: 0.2
+      timeout: 15
+      max_results: 10
+      retry_attempts: 2
+      retry_delay: 2
+      
+  # Production result processing
+  max_total_results: 50
+  deduplication_enabled: true
+  content_extraction_timeout: 30
+  relevance_threshold: 0.4  # Higher threshold for quality
+
+# LLM production settings
+llm:
+  providers:
+    openai:
+      model: "gpt-4"
+      temperature: 0.3
+      max_tokens: 2048
+      timeout: 30
+      retry_attempts: 3
+      
+    anthropic:
+      model: "claude-3-sonnet-20240229"
+      temperature: 0.3
+      max_tokens: 2048
+      timeout: 30
+      retry_attempts: 3
+      
+  # Strict cost management
+  cost_limits:
+    daily_budget: 500.0
+    per_request_limit: 0.10
+    warning_threshold: 0.8
+
+# Production database settings
+database:
+  # Production database connection
+  url: "${DATABASE_URL}"
+  
+  # Production connection pools
+  pool_size: 20
+  max_overflow: 30
+  pool_timeout: 30
+  pool_recycle: 3600
+  
+  # Production settings
+  echo: false  # No SQL logging in production
+  
+# Production Redis settings
+redis:
+  url: "${REDIS_URL}"
+  decode_responses: true
+  
+  # Production Redis optimizations
+  socket_keepalive: true
+  socket_keepalive_options: {}
+  
+# Production caching
+cache:
+  default_ttl: 3600  # 1 hour
+  
+  levels:
+    query_results:
+      ttl: 1800      # 30 minutes
+      max_size: 1000
+      
+    search_metadata:
+      ttl: 3600      # 1 hour
+      max_size: 5000
+      
+    user_sessions:
+      ttl: 86400     # 24 hours
+      max_size: 10000
+      
+    analytics_data:
+      ttl: 300       # 5 minutes
+      max_size: 50000
+
+# Production security settings
+security:
+  # Strict CORS for production domains
+  cors:
+    allow_origins: [
+      "https://langgraph-search.com",
+      "https://www.langgraph-search.com",
+      "https://app.langgraph-search.com",
+      "https://api.langgraph-search.com"
+    ]
+    
+  # Production JWT settings
+  jwt:
+    algorithm: "HS256"
+    access_token_expire_minutes: 30
+    refresh_token_expire_days: 7
+    
+  # Strict API key requirements
+  api_keys:
+    header_name: "X-API-Key"
+    require_https: true
+    
+  # Production content security
+  content_security:
+    max_query_length: 500
+    max_response_length: 10000
+    sanitize_html: true
+    
+  # Production rate limiting
+  rate_limiting:
+    storage: "redis"
+    key_func: "ip_and_user"
+    default_limits:
+      per_minute: 60
+      per_hour: 1000
+      per_day: 10000
+      
+  # Additional production security
+  headers:
+    # Security headers
+    x_content_type_options: "nosniff"
+    x_frame_options: "DENY"
+    x_xss_protection: "1; mode=block"
+    strict_transport_security: "max-age=31536000; includeSubDomains"
+    referrer_policy: "strict-origin-when-cross-origin"
+
+# Full compliance in production
+compliance:
+  frameworks:
+    enabled: ["GDPR", "CCPA", "SOC2", "HIPAA"]
+    
+  # Full GDPR compliance
+  gdpr:
+    data_retention_days: 365
+    consent_required: true
+    right_to_be_forgotten: true
+    data_portability: true
+    breach_notification_hours: 72
+    dpo_contact: "dpo@langgraph-search.com"
+    
+  # Full CCPA compliance
+  ccpa:
+    data_retention_days: 365
+    right_to_delete: true
+    right_to_know: true
+    opt_out_support: true
+    
+  # SOC2 compliance
+  soc2:
+    security_principle: true
+    availability_principle: true
+    processing_integrity: true
+    confidentiality_principle: true
+    privacy_principle: true
+    
+  # PII Detection - strict production mode
+  pii_detection:
+    enabled: true
+    action: "anonymize"
+    
+  # Full audit logging
+  audit:
+    enabled: true
+    log_level: "INFO"
+    retention_days: 90
+    include_request_body: false
+    include_response_body: false
+    encrypt_logs: true
+
+# Production analytics
+analytics:
+  real_time:
+    enabled: true
+    batch_size: 100
+    flush_interval: 60
+    sampling_rate: 0.1  # 10% sampling for performance
+    
+  metrics:
+    retention_days: 30
+    aggregation_intervals: [300, 3600, 86400]
+    
+  # Full business metrics tracking
+  business:
+    track_revenue: true
+    track_costs: true
+    track_conversion_rates: true
+    track_user_engagement: true
+    track_churn: true
+    track_satisfaction: true
+
+# Production multi-tenancy
+multitenancy:
+  enabled: true
+  isolation_strategy: "namespace"
+  
+  # Production tier limits
+  default_limits:
+    requests_per_hour: 1000
+    concurrent_requests: 10
+    storage_mb: 1000
+    
+  tiers:
+    free:
+      requests_per_hour: 100
+      concurrent_requests: 2
+      storage_mb: 100
+      features: ["basic_search"]
+      
+    pro:
+      requests_per_hour: 1000
+      concurrent_requests: 10
+      storage_mb: 1000
+      features: ["basic_search", "advanced_workflows", "analytics"]
+      
+    enterprise:
+      requests_per_hour: 10000
+      concurrent_requests: 50
+      storage_mb: 10000
+      features: ["all"]
+      priority_support: true
+
+# Production monitoring
+monitoring:
+  health_checks:
+    enabled: true
+    interval: 30
+    timeout: 10
+    deep_check_interval: 300  # Deep health check every 5 minutes
+    
+  metrics:
+    enabled: true
+    endpoint: "/metrics"
+    include_process_metrics: true
+    include_runtime_metrics: true
+    
+  # Strict production alerting
+  alerts:
+    error_rate_threshold: 0.05      # 5%
+    response_time_p95_threshold: 5.0 # 5 seconds
+    response_time_p99_threshold: 10.0 # 10 seconds
+    memory_usage_threshold: 0.8     # 80%
+    cpu_usage_threshold: 0.8        # 80%
+    disk_usage_threshold: 0.9       # 90%
+    connection_pool_threshold: 0.9   # 90%
+    
+  # Production tracing (sampled)
+  tracing:
+    enabled: true
+    sampling_rate: 0.05  # 5% sampling in production
+    service_name: "langgraph-search"
+    
+  # SLA monitoring
+  sla:
+    availability_target: 0.999      # 99.9%
+    response_time_target: 3.0       # 3 seconds
+    error_rate_target: 0.01         # 1%
+
+# Production logging
+logging:
+  level: "INFO"
+  format: "json"
+  
+  # Structured logging for production
+  handlers:
+    console:
+      enabled: false  # Disable console in production
+      
+    file:
+      enabled: true
+      level: "INFO"
+      path: "/app/logs/production.log"
+      max_size: "100MB"
+      backup_count: 10
+      compression: "gzip"
+      
+    elasticsearch:
+      enabled: true
+      level: "INFO"
+      index: "langgraph-search-prod"
+      hosts: ["${ELASTICSEARCH_HOSTS}"]
+      
+    syslog:
+      enabled: true
+      level: "WARNING"
+      facility: "local0"
+      
+  # Log filtering for production
+  filters:
+    exclude_paths: ["/health", "/metrics"]
+    exclude_user_agents: ["kube-probe", "prometheus"]
+    sanitize_sensitive_data: true
+    
+  # Log retention
+  retention:
+    application_logs: 90    # 90 days
+    audit_logs: 365        # 1 year
+    security_logs: 1095    # 3 years
+
+# Production feature flags
+features:
+  vector_search: true
+  semantic_similarity: true
+  multi_round_conversations: true
+  collaborative_workflows: true
+  advanced_analytics: true
+  real_time_streaming: true
+  webhook_notifications: true
+  external_integrations: true
+  
+  # Production-only features
+  advanced_security: true
+  compliance_reporting: true
+  enterprise_sso: true
+  priority_support: true
+
+# Production performance optimization
+performance:
+  # Production connection pools
+  connection_pools:
+    database:
+      min_size: 5
+      max_size: 20
+      
+    redis:
+      min_size: 5
+      max_size: 20
+      
+    http:
+      connector_limit: 100
+      connector_limit_per_host: 30
+      
+  # Production circuit breaker
+  circuit_breaker:
+    failure_threshold: 5
+    recovery_timeout: 60
+    expected_exception: "RequestException"
+    
+  # Production timeouts
+  timeouts:
+    database_query: 30
+    external_api: 30
+    llm_generation: 60
+    search_engine: 15
+    
+  # Production optimizations
+  optimizations:
+    connection_reuse: true
+    keep_alive: true
+    compression: true
+    connection_pooling: true
+
+# Production deployment disabled
+development:
+  debug: false
+  reload: false
+  profiling: false
+  mock_external_apis: false
+  
+  # No development endpoints in production
+  endpoints:
+    debug_info: false
+    admin_panel: false
+    metrics_ui: false
+
+# Production cloud storage
+storage:
+  type: "s3"
+  bucket: "langgraph-search-production"
+  region: "us-east-1"
+  
+  # Production storage configuration
+  encryption: "AES256"
+  versioning: true
+  lifecycle_policy: true
+  
+  directories:
+    uploads: "uploads/"
+    cache: "cache/"
+    logs: "logs/"
+    exports: "exports/"
+    backups: "backups/"
+
+# Production external services
+external_services:
+  # Production service URLs from environment
+  ollama:
+    base_url: "${OLLAMA_URL}"
+    timeout: 30
+    
+  elasticsearch:
+    hosts: ["${ELASTICSEARCH_HOSTS}"]
+    timeout: 30
+    username: "${ELASTICSEARCH_USERNAME}"
+    password: "${ELASTICSEARCH_PASSWORD}"
+    
+  prometheus:
+    gateway_url: "${PROMETHEUS_GATEWAY_URL}"
+
+# Production server settings
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4  # Multiple workers for production load
+  
+  # SSL required in production
+  ssl:
+    enabled: true
+    keyfile: "/etc/ssl/private/production.key"
+    certfile: "/etc/ssl/certs/production.crt"
+    
+  # Production server optimizations
+  keep_alive_timeout: 65
+  max_requests: 1000
+  max_requests_jitter: 100
+  preload_app: true
+
+# Production database setup
+database_seeding:
+  enabled: false  # No seeding in production
+
+# Production API documentation
+docs:
+  enabled: false  # Disable public docs in production
+  # Internal docs available through admin interface
+
+# Production backup configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention_days: 30
+  
+  # Comprehensive backup strategy
+  types:
+    database: true
+    redis: true
+    logs: true
+    configuration: true
+    uploads: true
+    
+  # Backup encryption
+  encryption: true
+  compression: true
+  
+  # Multi-region backup
+  replicate_to_regions: ["us-west-2", "eu-west-1"]
+
+# Production notification settings
+notifications:
+  enabled: true
+  
+  channels:
+    slack:
+      webhook_url: "${SLACK_PRODUCTION_WEBHOOK}"
+      channels: ["#production-alerts", "#ops-team"]
+      
+    email:
+      smtp_server: "${SMTP_SERVER}"
+      recipients: ["ops@langgraph-search.com", "security@langgraph-search.com"]
+      
+    pagerduty:
+      integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+      
+  # Critical alert conditions
+  alert_conditions:
+    system_down: true
+    high_error_rate: true
+    performance_degradation: true
+    security_incident: true
+    compliance_violation: true
+    cost_spike: true
+
+# Production disaster recovery
+disaster_recovery:
+  enabled: true
+  
+  # Recovery objectives
+  rto: 3600     # Recovery Time Objective: 1 hour
+  rpo: 300      # Recovery Point Objective: 5 minutes
+  
+  # Failover configuration
+  failover:
+    automatic: true
+    health_check_interval: 30
+    failure_threshold: 3
+    
+  # Multi-region setup
+  regions:
+    primary: "us-east-1"
+    secondary: "us-west-2"
+    
+# Production scaling configuration
+scaling:
+  auto_scaling:
+    enabled: true
+    min_replicas: 3
+    max_replicas: 20
+    
+    # Scaling metrics
+    cpu_threshold: 70
+    memory_threshold: 80
+    request_rate_threshold: 1000
+    
+  # Load balancing
+  load_balancer:
+    algorithm: "round_robin"
+    health_check_path: "/health"
+    health_check_interval: 30
+
+# Production maintenance windows
+maintenance:
+  # Scheduled maintenance windows
+  windows:
+    daily: "02:00-04:00 UTC"
+    weekly: "SUN 02:00-06:00 UTC"
+    monthly: "First SUN 02:00-08:00 UTC"
+    
+  # Maintenance procedures
+  procedures:
+    graceful_shutdown: true
+    drain_connections: true
+    backup_before_update: true
