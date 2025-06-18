@@ -1,0 +1,8 @@
+# k8s/production/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: langgraph-search
+  labels:
+    environment: production
+    app: langgraph-search
