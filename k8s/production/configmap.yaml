@@ -1,0 +1,14 @@
+# k8s/production/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: langgraph-config
+  namespace: langgraph-search
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  ENABLE_DISTRIBUTED: "true"
+  ENABLE_MONITORING: "true"
+  CACHE_STRATEGY: "distributed"
+  OPTIMIZATION_MODE: "balanced"
+  
