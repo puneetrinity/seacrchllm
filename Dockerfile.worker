@@ -1,0 +1,48 @@
+# Dockerfile.worker - For distributed processing
+FROM python:3.11-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user
+RUN groupadd -r worker && useradd -r -g worker worker
+
+# Set working directory
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.langgraph.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.langgraph.txt
+
+# Copy application code
+COPY --chown=worker:worker app/ ./app/
+COPY --chown=worker:worker scripts/ ./scripts/
+
+# Create necessary directories
+RUN mkdir -p logs cache checkpoints \
+    && chown -R worker:worker /app
+
+# Create __init__.py files
+RUN find /app -type d -exec touch {}/__init__.py \; 2>/dev/null || true
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Switch to non-root user
+USER worker
+
+# Health check for worker
+HEALTHCHECK --interval=60s --timeout=10s --start-period=60s --retries=3 \
+    CMD python -c "import sys; sys.exit(0)" || exit 1
+
+# Worker startup command
+CMD ["python", "-m", "app.worker.main"]
