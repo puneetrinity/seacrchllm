@@ -1,49 +1,68 @@
-# Dockerfile.production
+# Dockerfile.production - Fixed and Clean
 FROM python:3.11-slim as builder
 
-# Install system dependencies
+# Install system dependencies for building
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     git \
+    libpq-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Create virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy and install Python dependencies
+# Upgrade pip and install dependencies
 COPY requirements.langgraph.txt .
-RUN pip install --no-cache-dir -r requirements.langgraph.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.langgraph.txt
 
 # Production stage
 FROM python:3.11-slim as production
 
-# Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 # Copy virtual environment from builder
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Set working directory
+# Set working directory and create directories with proper permissions
 WORKDIR /app
+RUN mkdir -p /app/logs /app/cache /app/checkpoints /app/data \
+    && chown -R appuser:appuser /app
 
-# Copy application code
-COPY app/ ./app/
-COPY scripts/ ./scripts/
-COPY .env.production .env
+# Copy application code with proper ownership
+COPY --chown=appuser:appuser app/ ./app/
+COPY --chown=appuser:appuser scripts/ ./scripts/
 
-# Create necessary directories with proper permissions
-RUN mkdir -p /app/logs /app/cache /app/checkpoints && \
-    chown -R appuser:appuser /app
+# Create __init__.py files to ensure Python packages are recognized
+RUN find /app -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true \
+    && find /app -type d -exec touch {}/__init__.py \; 2>/dev/null || true
 
-# Security: Use non-root user
+# Copy or create environment file
+COPY --chown=appuser:appuser .env* ./
+RUN if [ ! -f .env ]; then \
+        echo "DATABASE_URL=postgresql://user:pass@localhost/db" > .env && \
+        echo "REDIS_URL=redis://localhost:6379" >> .env && \
+        echo "JWT_SECRET_KEY=change-this-in-production-use-at-least-32-chars" >> .env; \
+    fi
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Switch to non-root user
 USER appuser
 
 # Health check
@@ -51,14 +70,14 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Expose ports
-EXPOSE 8000 8080
+EXPOSE 8000
 
-# Production startup command
+# Production startup command with gunicorn
 CMD ["gunicorn", "app.main:app", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
      "--workers", "4", \
      "--bind", "0.0.0.0:8000", \
-     "--timeout", "30", \
+     "--timeout", "120", \
      "--keep-alive", "5", \
      "--max-requests", "1000", \
      "--max-requests-jitter", "100", \
